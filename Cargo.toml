@@ -1,0 +1,19 @@
+[package]
+name = "idx_binary"
+version = "0.14.0"
+edition = "2021"
+
+authors = ["Oden Shirataki <oden.srtk@gmail.com>"]
+
+description = "Indexed binary file. It uses mmap , various_data_file and avltiree."
+
+repository = "https://github.com/OdenShirataki/idx_binary"
+
+keywords = ["index","file","avltree","memmap","database"]
+categories = ["algorithms","caching","filesystem"]
+license = "MIT/Apache-2.0"
+
+[dependencies]
+natord = "1.0"
+various_data_file = { version = "0.11" , path = "../various_data_file" }
+idx_file = { version = "0.30" , path = "../idx_file" }
