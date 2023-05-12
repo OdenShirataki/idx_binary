@@ -11,7 +11,6 @@ pub struct Entity {
     data_address: DataAddress,
     num: f64,
 }
-
 impl Entity {
     pub fn new(data_address: &DataAddress, num: f64) -> Self {
         Self {
@@ -31,7 +30,6 @@ pub struct IdxBinary {
     index: IdxFile<Entity>,
     data_file: VariousDataFile,
 }
-
 impl AvltrieeHolder<Entity, &[u8]> for IdxBinary {
     fn triee(&self) -> &Avltriee<Entity> {
         self.triee()
@@ -43,8 +41,8 @@ impl AvltrieeHolder<Entity, &[u8]> for IdxBinary {
         self.cmp(left, right)
     }
 
-    fn search(&self, input: &&[u8]) -> Found {
-        self.index.triee().search_uord(|data| self.cmp(data, input))
+    fn search_end(&self, input: &&[u8]) -> Found {
+        self.index.triee().search_end(|data| self.cmp(data, input))
     }
 
     fn value(&mut self, input: &[u8]) -> Result<Entity> {
