@@ -43,11 +43,12 @@ impl<T: DataAddressHolder<T>> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
         ))
     }
 
-    fn delete(&mut self, row: u32, delete_node: &T) -> Result<()> {
+    fn delete_before_update(&mut self, row: u32, delete_node: &T) -> Result<()> {
         if !unsafe { self.index.triee().has_same(row) } {
             self.data_file.delete(&delete_node.data_address()).unwrap();
         }
         self.index.delete(row)?;
+        self.index.new_row(row)?;
         Ok(())
     }
 }
