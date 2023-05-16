@@ -21,19 +21,31 @@ pub struct IdxBinary<T> {
     index: IdxFile<T>,
     data_file: VariousDataFile,
 }
+impl<T> Deref for IdxBinary<T> {
+    type Target = IdxFile<T>;
+    fn deref(&self) -> &Self::Target {
+        &self.index
+    }
+}
+impl<T> DerefMut for IdxBinary<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.index
+    }
+}
+
 impl<T: DataAddressHolder<T>> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
     fn triee(&self) -> &Avltriee<T> {
-        self.index.triee()
+        self
     }
     fn triee_mut(&mut self) -> &mut Avltriee<T> {
-        self.index.triee_mut()
+        self
     }
     fn cmp(&self, left: &T, right: &&[u8]) -> Ordering {
         self.cmp(left, right)
     }
 
     fn search_end(&self, input: &&[u8]) -> Found {
-        self.index.triee().search_end(|data| self.cmp(data, input))
+        self.index.search_end(|data| self.cmp(data, input))
     }
 
     fn value(&mut self, input: &[u8]) -> Result<T> {
@@ -44,24 +56,12 @@ impl<T: DataAddressHolder<T>> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
     }
 
     fn delete_before_update(&mut self, row: u32, delete_node: &T) -> Result<()> {
-        if !unsafe { self.index.triee().has_same(row) } {
+        if !unsafe { self.index.has_same(row) } {
             self.data_file.delete(&delete_node.data_address()).unwrap();
         }
         self.index.delete(row)?;
         self.index.new_row(row)?;
         Ok(())
-    }
-}
-
-impl<T> Deref for IdxBinary<T> {
-    type Target = IdxFile<T>;
-    fn deref(&self) -> &Self::Target {
-        &self.index
-    }
-}
-impl<T> DerefMut for IdxBinary<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.index
     }
 }
 
