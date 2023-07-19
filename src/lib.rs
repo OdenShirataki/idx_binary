@@ -5,7 +5,7 @@ use std::{
     path::Path,
 };
 
-pub use natord;
+pub use human_sort;
 
 use anyhow::Result;
 pub use idx_file::{anyhow, Avltriee, AvltrieeHolder, AvltrieeIter, FileMmap, Found, IdxFile};
@@ -105,7 +105,7 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
             Ordering::Equal
         } else {
             unsafe {
-                natord::compare(
+                human_sort::compare(
                     std::str::from_utf8_unchecked(left),
                     std::str::from_utf8_unchecked(content),
                 )
