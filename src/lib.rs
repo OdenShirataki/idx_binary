@@ -1,3 +1,6 @@
+pub use idx_file::{anyhow, Avltriee, AvltrieeHolder, AvltrieeIter, FileMmap, Found, IdxFile};
+pub use various_data_file::DataAddress;
+
 use std::{
     cmp::Ordering,
     io,
@@ -5,12 +8,25 @@ use std::{
     path::Path,
 };
 
-pub use human_sort;
-
 use anyhow::Result;
-pub use idx_file::{anyhow, Avltriee, AvltrieeHolder, AvltrieeIter, FileMmap, Found, IdxFile};
-pub use various_data_file::DataAddress;
+use natord;
 use various_data_file::VariousDataFile;
+
+pub fn compare(left: &[u8], right: &[u8]) -> Ordering {
+    natord::compare_iter(
+        left.iter(),
+        right.iter(),
+        |_| false,
+        |&l, &r| l.cmp(&r),
+        |&c| {
+            if *c >= 48 && *c <= 57 {
+                Some(*c as isize - 48)
+            } else {
+                None
+            }
+        },
+    )
+}
 
 pub trait DataAddressHolder<T> {
     fn data_address(&self) -> &DataAddress;
@@ -104,12 +120,7 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
         if left == content {
             Ordering::Equal
         } else {
-            unsafe {
-                human_sort::compare(
-                    std::str::from_utf8_unchecked(left),
-                    std::str::from_utf8_unchecked(content),
-                )
-            }
+            compare(left, content)
         }
     }
 }
