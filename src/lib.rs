@@ -1,17 +1,15 @@
 mod compare;
 
 pub use compare::compare;
-pub use idx_file::{anyhow, Avltriee, AvltrieeHolder, AvltrieeIter, FileMmap, Found, IdxFile};
+pub use idx_file::{Avltriee, AvltrieeHolder, AvltrieeIter, FileMmap, Found, IdxFile};
 pub use various_data_file::DataAddress;
 
 use std::{
     cmp::Ordering,
-    io,
     ops::{Deref, DerefMut},
     path::Path,
 };
 
-use anyhow::Result;
 use various_data_file::VariousDataFile;
 
 pub trait DataAddressHolder<T> {
@@ -93,7 +91,7 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
     {
         let row = self.index.new_row(row);
         unsafe {
-            Avltriee::update_holder(self, row, content).unwrap();
+            Avltriee::update_holder(self, row, content);
         }
         row
     }
