@@ -50,38 +50,34 @@ impl<T: DataAddressHolder<T>> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
         self.index.search_end(|data| self.cmp(data, input))
     }
 
-    fn value(&mut self, input: &[u8]) -> Result<T> {
-        Ok(T::new(
-            self.data_file.insert(input)?.address().clone(),
-            input,
-        ))
+    fn value(&mut self, input: &[u8]) -> T {
+        T::new(self.data_file.insert(input).address().clone(), input)
     }
 
-    fn delete_before_update(&mut self, row: u32, delete_node: &T) -> Result<()> {
+    fn delete_before_update(&mut self, row: u32, delete_node: &T) {
         if !unsafe { self.index.has_same(row) } {
-            self.data_file.delete(&delete_node.data_address()).unwrap();
+            self.data_file.delete(&delete_node.data_address());
         }
-        self.index.delete(row)?;
-        self.index.new_row(row)?;
-        Ok(())
+        self.index.delete(row);
+        self.index.new_row(row);
     }
 }
 
 impl<T: DataAddressHolder<T>> IdxBinary<T> {
-    pub fn new<P: AsRef<Path>>(path: P) -> io::Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P) -> Self {
         let path = path.as_ref();
-        Ok(Self {
+        Self {
             index: IdxFile::new({
                 let mut path = path.to_path_buf();
                 path.push(".i");
                 path
-            })?,
+            }),
             data_file: VariousDataFile::new({
                 let mut path = path.to_path_buf();
                 path.push(".d");
                 path
-            })?,
-        })
+            }),
+        }
     }
     pub fn bytes(&self, row: u32) -> Option<&'static [u8]> {
         if let Some(value) = self.index.value(row) {
@@ -91,15 +87,15 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
         }
     }
 
-    pub fn update(&mut self, row: u32, content: &[u8]) -> Result<u32>
+    pub fn update(&mut self, row: u32, content: &[u8]) -> u32
     where
         T: Clone,
     {
-        let row = self.index.new_row(row)?;
+        let row = self.index.new_row(row);
         unsafe {
-            Avltriee::update_holder(self, row, content)?;
+            Avltriee::update_holder(self, row, content).unwrap();
         }
-        Ok(row)
+        row
     }
     pub fn cmp(&self, data: &T, content: &[u8]) -> Ordering {
         let left = unsafe { self.data_file.bytes(data.data_address()) };
