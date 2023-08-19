@@ -21,6 +21,18 @@ pub struct IdxBinary<T> {
     index: IdxFile<T>,
     data_file: VariousDataFile,
 }
+
+impl<T> AsRef<Avltriee<T>> for IdxBinary<T> {
+    fn as_ref(&self) -> &Avltriee<T> {
+        self
+    }
+}
+impl<T> AsMut<Avltriee<T>> for IdxBinary<T> {
+    fn as_mut(&mut self) -> &mut Avltriee<T> {
+        self
+    }
+}
+
 impl<T> Deref for IdxBinary<T> {
     type Target = IdxFile<T>;
     fn deref(&self) -> &Self::Target {
@@ -34,12 +46,6 @@ impl<T> DerefMut for IdxBinary<T> {
 }
 
 impl<T: DataAddressHolder<T>> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
-    fn triee(&self) -> &Avltriee<T> {
-        self
-    }
-    fn triee_mut(&mut self) -> &mut Avltriee<T> {
-        self
-    }
     fn cmp(&self, left: &T, right: &&[u8]) -> Ordering {
         self.cmp(left, right)
     }
