@@ -84,11 +84,9 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
         }
     }
     pub fn bytes(&self, row: u32) -> Option<&'static [u8]> {
-        if let Some(value) = self.index.value(row) {
-            Some(unsafe { self.data_file.bytes(&value.data_address()) })
-        } else {
-            None
-        }
+        self.index
+            .value(row)
+            .map(|value| unsafe { self.data_file.bytes(&value.data_address()) })
     }
 
     pub fn update(&mut self, row: u32, content: &[u8]) -> u32

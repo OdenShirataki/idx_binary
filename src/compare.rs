@@ -13,11 +13,7 @@ pub fn compare(left: &[u8], right: &[u8]) -> Ordering {
         ($v:expr) => {
             $v.and_then(|v| {
                 let v = *v as isize;
-                if v >= ('0' as isize) && v <= ('9' as isize) {
-                    Some(v as isize - 48)
-                } else {
-                    None
-                }
+                (v >= ('0' as isize) && v <= ('9' as isize)).then_some(v as isize - 48)
             })
         };
     }
