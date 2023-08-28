@@ -100,11 +100,9 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
         row
     }
     pub fn cmp(&self, data: &T, content: &[u8]) -> Ordering {
-        let left = unsafe { self.data_file.bytes(data.data_address()) };
-        if left == content {
-            Ordering::Equal
-        } else {
-            compare(left, content)
-        }
+        compare(
+            unsafe { self.data_file.bytes(data.data_address()) },
+            content,
+        )
     }
 }
