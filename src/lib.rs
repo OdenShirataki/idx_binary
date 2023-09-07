@@ -1,6 +1,7 @@
 mod compare;
 
 pub use compare::compare;
+use futures::executor::block_on;
 pub use idx_file::{Avltriee, AvltrieeHolder, AvltrieeIter, FileMmap, Found, IdxFile};
 pub use various_data_file::DataAddress;
 
@@ -59,10 +60,19 @@ impl<T: DataAddressHolder<T>> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
     }
 
     fn delete_before_update(&mut self, row: u32, delete_node: &T) {
-        if !unsafe { self.index.has_same(row) } {
-            self.data_file.delete(&delete_node.data_address());
-        }
-        self.index.delete(row);
+        block_on(async {
+            let is_unique = unsafe { self.index.is_unique(row) };
+            futures::join!(
+                async {
+                    if is_unique {
+                        self.data_file.delete(&delete_node.data_address());
+                    }
+                },
+                async {
+                    self.index.delete(row);
+                }
+            )
+        });
         self.index.new_row(row);
     }
 }
