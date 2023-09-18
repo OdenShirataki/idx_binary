@@ -47,18 +47,22 @@ impl<T> DerefMut for IdxBinary<T> {
 }
 
 impl<T: DataAddressHolder<T>> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
+    #[inline(always)]
     fn cmp(&self, left: &T, right: &&[u8]) -> Ordering {
         self.cmp(left, right)
     }
 
+    #[inline(always)]
     fn search_end(&self, input: &&[u8]) -> Found {
         self.index.search_end(|data| self.cmp(data, input))
     }
 
+    #[inline(always)]
     fn value(&mut self, input: &[u8]) -> T {
         T::new(self.data_file.insert(input).address().clone(), input)
     }
 
+    #[inline(always)]
     fn delete_before_update(&mut self, row: u32, delete_node: &T) {
         block_on(async {
             let is_unique = unsafe { self.index.is_unique(row) };
@@ -93,12 +97,15 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
             }),
         }
     }
+
+    #[inline(always)]
     pub fn bytes(&self, row: u32) -> Option<&'static [u8]> {
         self.index
             .value(row)
             .map(|value| unsafe { self.data_file.bytes(&value.data_address()) })
     }
 
+    #[inline(always)]
     pub fn update(&mut self, row: u32, content: &[u8]) -> u32
     where
         T: Clone,
@@ -109,6 +116,8 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
         }
         row
     }
+
+    #[inline(always)]
     pub fn cmp(&self, data: &T, content: &[u8]) -> Ordering {
         compare(
             unsafe { self.data_file.bytes(data.data_address()) },

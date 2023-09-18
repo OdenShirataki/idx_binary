@@ -1,5 +1,6 @@
 use std::cmp::Ordering::{self, Equal, Greater, Less};
 
+#[inline(always)]
 pub fn compare(left: &[u8], right: &[u8]) -> Ordering {
     let mut left = left.iter().fuse();
     let mut right = right.iter().fuse();
