@@ -1,7 +1,6 @@
 mod compare;
 
 pub use compare::compare;
-use futures::executor::block_on;
 pub use idx_file::{Avltriee, AvltrieeHolder, AvltrieeIter, FileMmap, Found, IdxFile};
 pub use various_data_file::DataAddress;
 
@@ -11,11 +10,22 @@ use std::{
     path::Path,
 };
 
+use futures::executor::block_on;
 use various_data_file::VariousDataFile;
 
 pub trait DataAddressHolder<T> {
     fn data_address(&self) -> &DataAddress;
     fn new(data_address: DataAddress, input: &[u8]) -> T;
+}
+
+impl DataAddressHolder<DataAddress> for DataAddress {
+    fn data_address(&self) -> &DataAddress {
+        &self
+    }
+
+    fn new(data_address: DataAddress, _: &[u8]) -> DataAddress {
+        data_address
+    }
 }
 
 pub struct IdxBinary<T> {
