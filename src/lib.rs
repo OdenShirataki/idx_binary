@@ -74,9 +74,9 @@ impl<T: DataAddressHolder<T>> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
     }
 
     #[inline(always)]
-    fn delete_before_update(&mut self, row: u32, delete_node: &T) {
+    fn delete_before_update(&mut self, row: NonZeroU32, delete_node: &T) {
         block_on(async {
-            let is_unique = unsafe { self.index.is_unique(row) };
+            let is_unique = unsafe { self.index.is_unique(row.get()) };
             futures::join!(
                 async {
                     if is_unique {
@@ -84,15 +84,11 @@ impl<T: DataAddressHolder<T>> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
                     }
                 },
                 async {
-                    self.index.delete(row);
+                    self.index.delete(row.get());
                 }
             )
         });
-        if let Some(row) = NonZeroU32::new(row) {
-            self.index.allocate(row);
-        } else {
-            unreachable!();
-        }
+        self.index.allocate(row);
     }
 }
 
@@ -121,19 +117,15 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
     }
 
     #[inline(always)]
-    pub fn update(&mut self, row: u32, content: &[u8]) -> u32
+    pub fn update(&mut self, row: u32, content: &[u8])
     where
         T: Clone,
     {
-        if let Some(row) = NonZeroU32::new(row) {
-            self.index.allocate(row);
-        } else {
-            unreachable!();
-        }
+        let row = NonZeroU32::new(row).unwrap();
+        self.index.allocate(row);
         unsafe {
             Avltriee::update_holder(self, row, content);
         }
-        row
     }
 
     #[inline(always)]
