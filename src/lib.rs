@@ -6,6 +6,7 @@ pub use various_data_file::DataAddress;
 
 use std::{
     cmp::Ordering,
+    num::NonZeroU32,
     ops::{Deref, DerefMut},
     path::Path,
 };
@@ -87,7 +88,11 @@ impl<T: DataAddressHolder<T>> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
                 }
             )
         });
-        self.index.new_row(row);
+        if let Some(row) = NonZeroU32::new(row) {
+            self.index.allocate(row);
+        } else {
+            unreachable!();
+        }
     }
 }
 
@@ -120,7 +125,11 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
     where
         T: Clone,
     {
-        let row = self.index.new_row(row);
+        if let Some(row) = NonZeroU32::new(row) {
+            self.index.allocate(row);
+        } else {
+            unreachable!();
+        }
         unsafe {
             Avltriee::update_holder(self, row, content);
         }
