@@ -11,7 +11,7 @@ use std::{
     path::Path,
 };
 
-use futures::executor::block_on;
+use async_trait::async_trait;
 use various_data_file::VariousDataFile;
 
 pub trait DataAddressHolder<T> {
@@ -57,7 +57,8 @@ impl<T> DerefMut for IdxBinary<T> {
     }
 }
 
-impl<T: DataAddressHolder<T>> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
+#[async_trait]
+impl<T: DataAddressHolder<T> + Send + Sync> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
     #[inline(always)]
     fn cmp(&self, left: &T, right: &&[u8]) -> Ordering {
         self.cmp(left, right)
@@ -73,21 +74,18 @@ impl<T: DataAddressHolder<T>> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
         T::new(self.data_file.insert(input).address().clone(), input)
     }
 
-    #[inline(always)]
-    fn delete_before_update(&mut self, row: NonZeroU32, delete_node: &T) {
-        block_on(async {
-            let is_unique = unsafe { self.index.is_unique(row) };
-            futures::join!(
-                async {
-                    if is_unique {
-                        self.data_file.delete(&delete_node.data_address());
-                    }
-                },
-                async {
-                    self.index.delete(row);
+    async fn delete_before_update(&mut self, row: NonZeroU32, delete_node: &T) {
+        let is_unique = unsafe { self.index.is_unique(row) };
+        futures::join!(
+            async {
+                if is_unique {
+                    self.data_file.delete(&delete_node.data_address());
                 }
-            )
-        });
+            },
+            async {
+                self.index.delete(row);
+            }
+        );
         self.index.allocate(row);
     }
 }
@@ -116,14 +114,13 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
             .map(|value| unsafe { self.data_file.bytes(&value.data_address()) })
     }
 
-    #[inline(always)]
-    pub fn update(&mut self, row: NonZeroU32, content: &[u8])
+    pub async fn update(&mut self, row: NonZeroU32, content: &[u8])
     where
-        T: Clone,
+        T: Send + Sync + Clone,
     {
         self.index.allocate(row);
         unsafe {
-            Avltriee::update_holder(self, row, content);
+            Avltriee::update_holder(self, row, content).await;
         }
     }
 
