@@ -91,14 +91,17 @@ impl<T: DataAddressHolder<T> + Send + Sync> AvltrieeHolder<T, &[u8]> for IdxBina
 }
 
 impl<T: DataAddressHolder<T>> IdxBinary<T> {
-    pub fn new<P: AsRef<Path>>(path: P) -> Self {
+    pub fn new<P: AsRef<Path>>(path: P, allocation_lot: u32) -> Self {
         let path = path.as_ref();
         Self {
-            index: IdxFile::new({
-                let mut path = path.to_path_buf();
-                path.push(".i");
-                path
-            }),
+            index: IdxFile::new(
+                {
+                    let mut path = path.to_path_buf();
+                    path.push(".i");
+                    path
+                },
+                allocation_lot,
+            ),
             data_file: VariousDataFile::new({
                 let mut path = path.to_path_buf();
                 path.push(".d");
