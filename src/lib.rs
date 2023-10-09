@@ -29,36 +29,36 @@ impl DataAddressHolder<DataAddress> for DataAddress {
     }
 }
 
-pub struct IdxBinary<T> {
+pub struct IdxBinary<T: Copy> {
     index: IdxFile<T>,
     data_file: VariousDataFile,
 }
 
-impl<T> AsRef<Avltriee<T>> for IdxBinary<T> {
+impl<T: Copy> AsRef<Avltriee<T>> for IdxBinary<T> {
     fn as_ref(&self) -> &Avltriee<T> {
         self
     }
 }
-impl<T> AsMut<Avltriee<T>> for IdxBinary<T> {
+impl<T: Copy> AsMut<Avltriee<T>> for IdxBinary<T> {
     fn as_mut(&mut self) -> &mut Avltriee<T> {
         self
     }
 }
 
-impl<T> Deref for IdxBinary<T> {
+impl<T: Copy> Deref for IdxBinary<T> {
     type Target = IdxFile<T>;
     fn deref(&self) -> &Self::Target {
         &self.index
     }
 }
-impl<T> DerefMut for IdxBinary<T> {
+impl<T: Copy> DerefMut for IdxBinary<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.index
     }
 }
 
 #[async_trait]
-impl<T: DataAddressHolder<T> + Send + Sync> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
+impl<T: Copy + DataAddressHolder<T> + Send + Sync> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
     #[inline(always)]
     fn cmp(&self, left: &T, right: &&[u8]) -> Ordering {
         self.cmp(left, right)
@@ -90,7 +90,7 @@ impl<T: DataAddressHolder<T> + Send + Sync> AvltrieeHolder<T, &[u8]> for IdxBina
     }
 }
 
-impl<T: DataAddressHolder<T>> IdxBinary<T> {
+impl<T: Copy + DataAddressHolder<T>> IdxBinary<T> {
     pub fn new<P: AsRef<Path>>(path: P, allocation_lot: u32) -> Self {
         let path = path.as_ref();
         Self {
