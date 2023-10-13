@@ -79,7 +79,7 @@ impl<T: DataAddressHolder<T> + Send + Sync> AvltrieeHolder<T, &[u8]> for IdxBina
         futures::join!(
             async {
                 if is_unique {
-                    self.data_file.delete(&delete_node.data_address());
+                    self.data_file.delete(delete_node.data_address());
                 }
             },
             async {
