@@ -57,19 +57,16 @@ impl<T> DerefMut for IdxBinary<T> {
     }
 }
 
-#[async_trait]
-impl<T: DataAddressHolder<T> + Send + Sync> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
-    #[inline(always)]
+#[async_trait(?Send)]
+impl<T: DataAddressHolder<T>> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
     fn cmp(&self, left: &T, right: &&[u8]) -> Ordering {
         self.cmp(left, right)
     }
 
-    #[inline(always)]
     fn search_end(&self, input: &&[u8]) -> Found {
         self.index.search_end(|data| self.cmp(data, input))
     }
 
-    #[inline(always)]
     fn value(&mut self, input: &[u8]) -> T {
         T::new(self.data_file.insert(input).address().clone(), input)
     }
@@ -110,7 +107,6 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
         }
     }
 
-    #[inline(always)]
     pub fn bytes(&self, row: NonZeroU32) -> Option<&'static [u8]> {
         self.index
             .value(row)
@@ -119,7 +115,7 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
 
     pub async fn update(&mut self, row: NonZeroU32, content: &[u8])
     where
-        T: Send + Sync + Copy,
+        T: Copy,
     {
         self.index.allocate(row);
         unsafe {
@@ -127,7 +123,6 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
         }
     }
 
-    #[inline(always)]
     pub fn cmp(&self, data: &T, content: &[u8]) -> Ordering {
         compare(
             unsafe { self.data_file.bytes(data.data_address()) },
