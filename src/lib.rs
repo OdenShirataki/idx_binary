@@ -88,6 +88,11 @@ impl<T: DataAddressHolder<T>> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
 }
 
 impl<T: DataAddressHolder<T>> IdxBinary<T> {
+    /// Opens the file and creates the IdxBinary<T>.
+    /// # Arguments
+    /// * `path` - Path of file to save data
+    /// * `allocation_lot` - Extends the specified size when the file size becomes insufficient due to data addition.
+    /// If you expect to add a lot of data, specifying a larger size will improve performance.
     pub fn new<P: AsRef<Path>>(path: P, allocation_lot: u32) -> Self {
         let path = path.as_ref();
         Self {
@@ -107,12 +112,15 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
         }
     }
 
+    /// Returns the value of the specified row. Returns None if the row does not exist.
     pub fn bytes(&self, row: NonZeroU32) -> Option<&'static [u8]> {
         self.index
             .value(row)
-            .map(|value| unsafe { self.data_file.bytes(&value.data_address()) })
+            .map(|value| self.data_file.bytes(&value.data_address()))
     }
 
+    /// Updates the byte string of the specified row.
+    /// If row does not exist, it will be expanded automatically..
     pub async fn update(&mut self, row: NonZeroU32, content: &[u8])
     where
         T: Copy,
@@ -123,10 +131,8 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
         }
     }
 
+    /// Compare the stored data and the byte sequence.
     pub fn cmp(&self, data: &T, content: &[u8]) -> Ordering {
-        compare(
-            unsafe { self.data_file.bytes(data.data_address()) },
-            content,
-        )
+        compare(self.data_file.bytes(data.data_address()), content)
     }
 }
