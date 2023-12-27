@@ -127,7 +127,7 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
     {
         self.index.allocate(row);
         unsafe {
-            Avltriee::update_holder(self, row, content).await;
+            Avltriee::update_with_holder(self, row, content).await;
         }
     }
 
