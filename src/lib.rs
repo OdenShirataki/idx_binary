@@ -123,7 +123,7 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
     /// If row does not exist, it will be expanded automatically..
     pub async fn update(&mut self, row: NonZeroU32, content: &[u8])
     where
-        T: Copy,
+        T: Clone,
     {
         self.index.allocate(row);
         unsafe {
