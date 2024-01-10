@@ -14,80 +14,68 @@ use std::{
 use async_trait::async_trait;
 use various_data_file::VariousDataFile;
 
-pub trait DataAddressHolder<T> {
-    fn data_address(&self) -> &DataAddress;
-    fn new(data_address: DataAddress, input: &[u8]) -> T;
-}
-
-impl DataAddressHolder<DataAddress> for DataAddress {
-    fn data_address(&self) -> &DataAddress {
-        &self
-    }
-
-    fn new(data_address: DataAddress, _: &[u8]) -> DataAddress {
-        data_address
-    }
-}
-
-pub struct IdxBinary<T> {
-    index: IdxFile<T>,
+pub struct IdxBinary {
+    index: IdxFile<DataAddress>,
     data_file: VariousDataFile,
 }
 
-impl<T> AsRef<Avltriee<T>> for IdxBinary<T> {
-    fn as_ref(&self) -> &Avltriee<T> {
+impl AsRef<Avltriee<DataAddress>> for IdxBinary {
+    fn as_ref(&self) -> &Avltriee<DataAddress> {
         self
     }
 }
-impl<T> AsMut<Avltriee<T>> for IdxBinary<T> {
-    fn as_mut(&mut self) -> &mut Avltriee<T> {
+impl AsMut<Avltriee<DataAddress>> for IdxBinary {
+    fn as_mut(&mut self) -> &mut Avltriee<DataAddress> {
         self
     }
 }
 
-impl<T> Deref for IdxBinary<T> {
-    type Target = IdxFile<T>;
+impl Deref for IdxBinary {
+    type Target = IdxFile<DataAddress>;
     fn deref(&self) -> &Self::Target {
         &self.index
     }
 }
-impl<T> DerefMut for IdxBinary<T> {
+impl DerefMut for IdxBinary {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.index
     }
 }
 
 #[async_trait(?Send)]
-impl<T: DataAddressHolder<T>> AvltrieeHolder<T, &[u8]> for IdxBinary<T> {
-    fn cmp(&self, left: &T, right: &&[u8]) -> Ordering {
+impl AvltrieeHolder<DataAddress, &[u8]> for IdxBinary {
+    fn cmp(&self, left: &DataAddress, right: &&[u8]) -> Ordering {
         self.cmp(left, right)
     }
 
-    fn search_end(&self, input: &&[u8]) -> Found {
-        self.index.search_end(|data| self.cmp(data, input))
+    fn search(&self, input: &&[u8]) -> Found {
+        self.index.search(|data| self.cmp(data, input))
     }
 
-    fn value(&mut self, input: &[u8]) -> T {
-        T::new(self.data_file.insert(input).address().clone(), input)
+    fn convert_value(&mut self, input: &[u8]) -> DataAddress {
+        self.data_file.insert(input).address().clone()
     }
 
-    async fn delete_before_update(&mut self, row: NonZeroU32, delete_node: &T) {
-        let is_unique = unsafe { self.index.is_unique(row) };
+    async fn delete_before_update(&mut self, row: NonZeroU32) {
+        let unique_value = if let Some((true, node)) = self.index.is_unique(row) {
+            Some(node.deref().clone())
+        } else {
+            None
+        };
         futures::join!(
             async {
-                if is_unique {
-                    self.data_file.delete(delete_node.data_address());
+                if let Some(unique_value) = unique_value {
+                    self.data_file.delete(unique_value);
                 }
             },
             async {
                 self.index.delete(row);
             }
         );
-        self.index.allocate(row);
     }
 }
 
-impl<T: DataAddressHolder<T>> IdxBinary<T> {
+impl IdxBinary {
     /// Opens the file and creates the IdxBinary<T>.
     /// # Arguments
     /// * `path` - Path of file to save data
@@ -115,24 +103,18 @@ impl<T: DataAddressHolder<T>> IdxBinary<T> {
     /// Returns the value of the specified row. Returns None if the row does not exist.
     pub fn bytes(&self, row: NonZeroU32) -> Option<&'static [u8]> {
         self.index
-            .value(row)
-            .map(|value| self.data_file.bytes(&value.data_address()))
+            .get(row)
+            .map(|value| self.data_file.bytes(&value))
     }
 
     /// Updates the byte string of the specified row.
     /// If row does not exist, it will be expanded automatically..
-    pub async fn update(&mut self, row: NonZeroU32, content: &[u8])
-    where
-        T: Clone,
-    {
-        self.index.allocate(row);
-        unsafe {
-            Avltriee::update_with_holder(self, row, content).await;
-        }
+    pub async fn update(&mut self, row: NonZeroU32, content: &[u8]) {
+        Avltriee::update_with_holder(self, row, content).await;
     }
 
     /// Compare the stored data and the byte sequence.
-    pub fn cmp(&self, data: &T, content: &[u8]) -> Ordering {
-        compare(self.data_file.bytes(data.data_address()), content)
+    pub fn cmp(&self, data: &DataAddress, content: &[u8]) -> Ordering {
+        compare(self.data_file.bytes(data), content)
     }
 }
