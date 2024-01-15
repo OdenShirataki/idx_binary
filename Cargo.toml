@@ -1,6 +1,6 @@
 [package]
 name = "idx_binary"
-version = "0.30.0"
+version = "0.31.0"
 edition = "2021"
 
 authors = ["Oden Shirataki <oden.srtk@gmail.com>"]
@@ -17,4 +17,4 @@ license = "MIT/Apache-2.0"
 futures = "0.3.29"
 async-trait = "0.1.74"
 various_data_file = { version = "0.16.0" }
-idx_file = { version = "0.50.0" }
+idx_file = { version = "0.51.0" }
