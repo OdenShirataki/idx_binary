@@ -1,6 +1,7 @@
 mod compare;
 
 pub use compare::compare;
+use idx_file::IdxFileAllocator;
 pub use idx_file::{Avltriee, AvltrieeHolder, AvltrieeIter, FileMmap, Found, IdxFile};
 pub use various_data_file::DataAddress;
 
@@ -14,18 +15,20 @@ use std::{
 use async_trait::async_trait;
 use various_data_file::VariousDataFile;
 
+type IdxBinaryAllocator = IdxFileAllocator<DataAddress>;
+
 pub struct IdxBinary {
     index: IdxFile<DataAddress>,
     data_file: VariousDataFile,
 }
 
-impl AsRef<Avltriee<DataAddress>> for IdxBinary {
-    fn as_ref(&self) -> &Avltriee<DataAddress> {
+impl AsRef<Avltriee<DataAddress, IdxBinaryAllocator>> for IdxBinary {
+    fn as_ref(&self) -> &Avltriee<DataAddress, IdxBinaryAllocator> {
         self
     }
 }
-impl AsMut<Avltriee<DataAddress>> for IdxBinary {
-    fn as_mut(&mut self) -> &mut Avltriee<DataAddress> {
+impl AsMut<Avltriee<DataAddress, IdxBinaryAllocator>> for IdxBinary {
+    fn as_mut(&mut self) -> &mut Avltriee<DataAddress, IdxBinaryAllocator> {
         self
     }
 }
@@ -43,7 +46,7 @@ impl DerefMut for IdxBinary {
 }
 
 #[async_trait(?Send)]
-impl AvltrieeHolder<DataAddress, &[u8]> for IdxBinary {
+impl AvltrieeHolder<DataAddress, &[u8], IdxBinaryAllocator> for IdxBinary {
     fn cmp(&self, left: &DataAddress, right: &&[u8]) -> Ordering {
         self.cmp(left, right)
     }
