@@ -79,7 +79,7 @@ impl AvltrieeHolder<DataAddress, &[u8], IdxBinaryAllocator> for IdxBinary {
 }
 
 impl IdxBinary {
-    /// Opens the file and creates the IdxBinary<T>.
+    /// Opens the file and creates the IdxBinary.
     /// # Arguments
     /// * `path` - Path of file to save data
     /// * `allocation_lot` - Extends the specified size when the file size becomes insufficient due to data addition.
@@ -105,9 +105,7 @@ impl IdxBinary {
 
     /// Returns the value of the specified row. Returns None if the row does not exist.
     pub fn bytes(&self, row: NonZeroU32) -> Option<&[u8]> {
-        self.index
-            .get(row)
-            .map(|value| self.data_file.bytes(&value))
+        self.index.get(row).map(|v| self.data_file.bytes(&v))
     }
 
     /// Updates the byte string of the specified row.
