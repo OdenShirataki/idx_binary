@@ -12,7 +12,6 @@ use std::{
     path::Path,
 };
 
-use async_trait::async_trait;
 use various_data_file::VariousDataFile;
 
 type IdxBinaryAllocator = IdxFileAllocator<DataAddress>;
@@ -45,7 +44,6 @@ impl DerefMut for IdxBinary {
     }
 }
 
-#[async_trait(?Send)]
 impl AvltrieeHolder<DataAddress, &[u8], IdxBinaryAllocator> for IdxBinary {
     fn cmp(&self, left: &DataAddress, right: &&[u8]) -> Ordering {
         self.cmp(left, right)
