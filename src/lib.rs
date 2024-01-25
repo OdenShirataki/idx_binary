@@ -10,6 +10,7 @@ use std::{
     num::NonZeroU32,
     ops::{Deref, DerefMut},
     path::Path,
+    thread,
 };
 
 use various_data_file::VariousDataFile;
@@ -57,22 +58,23 @@ impl AvltrieeHolder<DataAddress, &[u8], IdxBinaryAllocator> for IdxBinary {
         self.data_file.insert(input).address().clone()
     }
 
-    async fn delete_before_update(&mut self, row: NonZeroU32) {
+    fn delete_before_update(&mut self, row: NonZeroU32) {
         let unique_value = if let Some((true, node)) = self.index.is_unique(row) {
             Some(node.deref().clone())
         } else {
             None
         };
-        futures::join!(
-            async {
+        thread::scope(|s| {
+            let h1 = s.spawn(|| {
                 if let Some(unique_value) = unique_value {
                     self.data_file.delete(unique_value);
                 }
-            },
-            async {
-                self.index.delete(row);
-            }
-        );
+            });
+            let h2 = s.spawn(|| self.index.delete(row));
+
+            h1.join().unwrap();
+            h2.join().unwrap();
+        });
     }
 }
 
@@ -108,8 +110,8 @@ impl IdxBinary {
 
     /// Updates the byte string of the specified row.
     /// If row does not exist, it will be expanded automatically..
-    pub async fn update(&mut self, row: NonZeroU32, content: &[u8]) {
-        Avltriee::update_with_holder(self, row, content).await;
+    pub fn update(&mut self, row: NonZeroU32, content: &[u8]) {
+        Avltriee::update_with_holder(self, row, content);
     }
 
     /// Compare the stored data and the byte sequence.
