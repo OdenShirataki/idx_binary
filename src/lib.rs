@@ -60,7 +60,7 @@ impl AvltrieeHolder<DataAddress, &[u8], IdxBinaryAllocator> for IdxBinary {
 
     fn delete_before_update(&mut self, row: NonZeroU32) {
         let unique_value = if let Some((true, node)) = self.index.is_unique(row) {
-            Some(node.deref().clone())
+            Some((**node).clone())
         } else {
             None
         };
