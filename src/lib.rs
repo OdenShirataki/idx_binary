@@ -1,8 +1,8 @@
 mod compare;
 
 pub use compare::compare;
-use idx_file::IdxFileAllocator;
-pub use idx_file::{Avltriee, AvltrieeHolder, AvltrieeIter, FileMmap, Found, IdxFile};
+pub use idx_file::{Avltriee, AvltrieeIter, AvltrieeUpdate, FileMmap, Found, IdxFile};
+use idx_file::{AvltrieeOrd, IdxFileAllocator};
 pub use various_data_file::DataAddress;
 
 use std::{
@@ -18,23 +18,12 @@ use various_data_file::VariousDataFile;
 type IdxBinaryAllocator = IdxFileAllocator<DataAddress>;
 
 pub struct IdxBinary {
-    index: IdxFile<DataAddress>,
+    index: IdxFile<DataAddress, [u8]>,
     data_file: VariousDataFile,
 }
 
-impl AsRef<Avltriee<DataAddress, IdxBinaryAllocator>> for IdxBinary {
-    fn as_ref(&self) -> &Avltriee<DataAddress, IdxBinaryAllocator> {
-        self
-    }
-}
-impl AsMut<Avltriee<DataAddress, IdxBinaryAllocator>> for IdxBinary {
-    fn as_mut(&mut self) -> &mut Avltriee<DataAddress, IdxBinaryAllocator> {
-        self
-    }
-}
-
 impl Deref for IdxBinary {
-    type Target = IdxFile<DataAddress>;
+    type Target = IdxFile<DataAddress, [u8]>;
     fn deref(&self) -> &Self::Target {
         &self.index
     }
@@ -45,15 +34,24 @@ impl DerefMut for IdxBinary {
     }
 }
 
-impl AvltrieeHolder<DataAddress, &[u8], IdxBinaryAllocator> for IdxBinary {
-    fn cmp(&self, left: &DataAddress, right: &&[u8]) -> Ordering {
-        self.cmp(left, right)
+impl AsRef<Avltriee<DataAddress, [u8], IdxBinaryAllocator>> for IdxBinary {
+    fn as_ref(&self) -> &Avltriee<DataAddress, [u8], IdxBinaryAllocator> {
+        self
     }
-
-    fn search(&self, input: &&[u8]) -> Found {
-        self.index.search(|data| self.cmp(data, input))
+}
+impl AsMut<Avltriee<DataAddress, [u8], IdxBinaryAllocator>> for IdxBinary {
+    fn as_mut(&mut self) -> &mut Avltriee<DataAddress, [u8], IdxBinaryAllocator> {
+        self
     }
+}
 
+impl AvltrieeOrd<DataAddress, [u8], IdxBinaryAllocator> for IdxBinary {
+    fn cmp(&self, left: &DataAddress, right: &[u8]) -> Ordering {
+        compare(self.data_file.bytes(left), right)
+    }
+}
+
+impl AvltrieeUpdate<DataAddress, [u8], IdxFileAllocator<DataAddress>> for IdxBinary {
     fn convert_value(&mut self, input: &[u8]) -> DataAddress {
         self.data_file.insert(input).address().clone()
     }
@@ -110,12 +108,7 @@ impl IdxBinary {
 
     /// Updates the byte string of the specified row.
     /// If row does not exist, it will be expanded automatically..
-    pub fn update(&mut self, row: NonZeroU32, content: &[u8]) {
-        Avltriee::update_with_holder(self, row, content);
-    }
-
-    /// Compare the stored data and the byte sequence.
-    pub fn cmp(&self, data: &DataAddress, content: &[u8]) -> Ordering {
-        compare(self.data_file.bytes(data), content)
+    pub fn update(&mut self, row: NonZeroU32, content: &Vec<u8>) {
+        Avltriee::update_with(self, row, content);
     }
 }
