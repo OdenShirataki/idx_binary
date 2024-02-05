@@ -10,7 +10,6 @@ use std::{
     num::NonZeroU32,
     ops::{Deref, DerefMut},
     path::Path,
-    thread,
 };
 
 use various_data_file::VariousDataFile;
@@ -56,23 +55,10 @@ impl AvltrieeUpdate<DataAddress, [u8], IdxFileAllocator<DataAddress>> for IdxBin
         self.data_file.insert(input).address().clone()
     }
 
-    fn delete_before_update(&mut self, row: NonZeroU32) {
-        let unique_value = if let Some((true, node)) = self.index.is_unique(row) {
-            Some((**node).clone())
-        } else {
-            None
-        };
-        thread::scope(|s| {
-            let h1 = s.spawn(|| {
-                if let Some(unique_value) = unique_value {
-                    self.data_file.delete(unique_value);
-                }
-            });
-            let h2 = s.spawn(|| self.index.delete(row));
-
-            h1.join().unwrap();
-            h2.join().unwrap();
-        });
+    fn on_delete(&mut self, row: NonZeroU32) {
+        if let Some((true, node)) = self.index.is_unique(row) {
+            self.data_file.delete((**node).clone());
+        }
     }
 }
 
@@ -104,11 +90,5 @@ impl IdxBinary {
     /// Returns the value of the specified row. Returns None if the row does not exist.
     pub fn bytes(&self, row: NonZeroU32) -> Option<&[u8]> {
         self.index.get(row).map(|v| self.data_file.bytes(&v))
-    }
-
-    /// Updates the byte string of the specified row.
-    /// If row does not exist, it will be expanded automatically..
-    pub fn update(&mut self, row: NonZeroU32, content: &Vec<u8>) {
-        Avltriee::update_with(self, row, content);
     }
 }
