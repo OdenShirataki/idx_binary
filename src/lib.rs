@@ -51,7 +51,7 @@ impl AvltrieeOrd<DataAddress, [u8], IdxBinaryAllocator> for IdxBinary {
 }
 
 impl AvltrieeUpdate<DataAddress, [u8], IdxFileAllocator<DataAddress>> for IdxBinary {
-    fn convert_value(&mut self, input: &[u8]) -> DataAddress {
+    fn unique_value(&mut self, input: &[u8]) -> DataAddress {
         self.data_file.insert(input).address().clone()
     }
 
