@@ -42,7 +42,7 @@ impl AvltrieeSearch<DataAddress, [u8], IdxBinaryAllocator> for IdxBinary {
 
 impl AvltrieeUpdate<DataAddress, [u8], IdxBinaryAllocator> for IdxBinary {
     fn convert_value_on_insert_unique(&mut self, input: &[u8]) -> DataAddress {
-        self.data_file.insert(input).address().clone()
+        self.data_file.insert(input).into_address()
     }
 
     fn on_delete(&mut self, row: NonZeroU32) {
@@ -100,7 +100,7 @@ impl IdxBinary {
             unsafe {
                 self.index.insert_unique_unchecked(
                     row,
-                    self.data_file.insert(content).address().clone(),
+                    self.data_file.insert(content).into_address(),
                     found,
                 );
             }
