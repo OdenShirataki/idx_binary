@@ -16,4 +16,4 @@ license = "MIT/Apache-2.0"
 [dependencies]
 futures = "0.3.29"
 various_data_file = { version = "0.17.0" }
-idx_file = { version = "0.58.0" }
+idx_file = { version = "0.59.0" }
