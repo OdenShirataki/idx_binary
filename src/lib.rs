@@ -35,13 +35,13 @@ impl AvltrieeSearch<DataAddress, [u8], IdxBinaryAllocator> for IdxBinary {
         compare(self.data_file.bytes(left), right)
     }
 
-    fn convert<'a, 'b: 'a>(&'a self, value: &'b DataAddress) -> &[u8] {
+    fn invert<'a, 'b: 'a>(&'a self, value: &'b DataAddress) -> &[u8] {
         self.data_file.bytes(value)
     }
 }
 
 impl AvltrieeUpdate<DataAddress, [u8], IdxBinaryAllocator> for IdxBinary {
-    fn convert_value_on_insert_unique(&mut self, input: &[u8]) -> DataAddress {
+    fn convert_on_insert_unique(&mut self, input: &[u8]) -> DataAddress {
         self.data_file.insert(input).into_address()
     }
 
