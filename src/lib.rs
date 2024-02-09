@@ -7,7 +7,7 @@ pub use idx_file::{
     AvltrieeIter, AvltrieeSearch, AvltrieeUpdate, FileMmap, IdxFile, IdxFileAvlTriee,
 };
 
-use idx_file::{search, IdxFileAllocator};
+use idx_file::IdxFileAllocator;
 use various_data_file::{DataAddress, VariousDataFile};
 
 type IdxBinaryAvltriee = IdxFileAvlTriee<DataAddress, [u8]>;
@@ -92,16 +92,16 @@ impl IdxBinary {
 
     /// Finds a sequence of bytes, inserts it if it doesn't exist, and returns a row.
     pub fn row_or_insert(&mut self, content: &[u8]) -> NonZeroU32 {
-        let found = search::edge(self, content);
-        if let (Ordering::Equal, Some(found_row)) = (found.ord, found.row) {
-            found_row
+        let edge = self.edge(content);
+        if let (Some(row), Ordering::Equal) = edge {
+            row
         } else {
             let row = unsafe { NonZeroU32::new_unchecked(self.index.rows_count() + 1) };
             unsafe {
                 self.index.insert_unique_unchecked(
                     row,
                     self.data_file.insert(content).into_address(),
-                    found,
+                    edge,
                 );
             }
             row
