@@ -8,7 +8,7 @@ pub use idx_file::{
     AvltrieeIter, AvltrieeSearch, AvltrieeUpdate, FileMmap, IdxFile, IdxFileAvlTriee,
 };
 
-use idx_file::IdxFileAllocator;
+use idx_file::{AvltrieeNode, IdxFileAllocator};
 use various_data_file::{DataAddress, VariousDataFile};
 
 type IdxBinaryAvltriee = IdxFileAvlTriee<DataAddress, [u8]>;
@@ -126,8 +126,20 @@ impl AvltrieeSearch<DataAddress, [u8], IdxBinaryAllocator> for IdxBinary {
         }
     }
 
-    fn invert<'a>(&'a self, value: &'a DataAddress) -> &[u8] {
-        self.data_file.bytes(value)
+    /// Returns the value of the specified row. Returns None if the row does not exist.
+    fn value(&self, row: NonZeroU32) -> Option<&[u8]> {
+        self.as_ref().node(row).map(|v| self.data_file.bytes(v))
+    }
+
+    /// Returns the value of the specified row.
+    unsafe fn value_unchecked(&self, row: NonZeroU32) -> &[u8] {
+        self.data_file.bytes(self.as_ref().node_unchecked(row))
+    }
+
+    /// Returns node adn value of the specified row.
+    unsafe fn node_value_unchecked(&self, row: NonZeroU32) -> (&AvltrieeNode<DataAddress>, &[u8]) {
+        let node = self.as_ref().node_unchecked(row);
+        (node, self.data_file.bytes(node))
     }
 }
 
