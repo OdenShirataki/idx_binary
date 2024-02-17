@@ -136,7 +136,7 @@ impl AvltrieeSearch<DataAddress, [u8], IdxBinaryAllocator> for IdxBinary {
         self.data_file.bytes(self.as_ref().node_unchecked(row))
     }
 
-    /// Returns node adn value of the specified row.
+    /// Returns node and value of the specified row.
     unsafe fn node_value_unchecked(&self, row: NonZeroU32) -> (&AvltrieeNode<DataAddress>, &[u8]) {
         let node = self.as_ref().node_unchecked(row);
         (node, self.data_file.bytes(node))
@@ -181,7 +181,7 @@ impl IdxBinary {
     }
 
     /// Opens the file and creates the IdxBinary.
-    /// /// # Arguments
+    /// # Arguments
     /// * `path` - Path of part of filename without extension to save data.
     /// * `allocation_lot` - Extends the specified size when the file size becomes insufficient due to data addition.
     /// If you expect to add a lot of data, specifying a larger size will improve performance.
