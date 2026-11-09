@@ -1,7 +1,8 @@
 [package]
 name = "idx_binary"
-version = "0.38.5"
-edition = "2021"
+version = "0.39.0"
+edition = "2024"
+rust-version = "1.85"
 
 authors = ["Oden Shirataki <oden.srtk@gmail.com>"]
 
@@ -14,6 +15,5 @@ categories = ["algorithms", "caching", "filesystem"]
 license = "MIT/Apache-2.0"
 
 [dependencies]
-futures = "0.3.29"
-various_data_file = { version = "0.18.0" }
-idx_file = { version = "0.64.0" }
+various_data_file = { version = "0.19.0", path = "../various_data_file" }
+idx_file = { version = "0.65.0", path = "../idx_file" }

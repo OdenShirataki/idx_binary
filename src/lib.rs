@@ -1,3 +1,7 @@
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct ReadmeDoctests;
+
 use std::{
     cmp::Ordering::{self, Equal, Greater, Less},
     num::NonZeroU32,
@@ -33,8 +37,8 @@ impl AsMut<IdxBinaryAvltriee> for IdxBinary {
 
 impl AvltrieeSearch<DataAddress, [u8], IdxBinaryAllocator> for IdxBinary {
     fn cmp(left: &[u8], right: &[u8]) -> Ordering {
-        let mut left = left.into_iter().fuse();
-        let mut right = right.into_iter().fuse();
+        let mut left = left.iter().fuse();
+        let mut right = right.iter().fuse();
 
         let mut l;
         let mut r;
@@ -42,7 +46,7 @@ impl AvltrieeSearch<DataAddress, [u8], IdxBinaryAllocator> for IdxBinary {
         let mut rr;
 
         macro_rules! to_digit {
-            ($v:expr) => {
+            ($v:expr_2021) => {
                 $v.and_then(|v| {
                     let v = *v as isize;
                     (v >= ('0' as isize) && v <= ('9' as isize)).then_some(v - 48)
@@ -65,7 +69,7 @@ impl AvltrieeSearch<DataAddress, [u8], IdxBinaryAllocator> for IdxBinary {
         }
 
         macro_rules! return_unless_equal {
-            ($ord:expr) => {
+            ($ord:expr_2021) => {
                 match $ord {
                     Equal => {}
                     lastcmp => return lastcmp,
@@ -133,13 +137,15 @@ impl AvltrieeSearch<DataAddress, [u8], IdxBinaryAllocator> for IdxBinary {
 
     /// Returns the value of the specified row.
     unsafe fn value_unchecked(&self, row: NonZeroU32) -> &[u8] {
-        self.data_file.bytes(self.as_ref().node_unchecked(row))
+        unsafe { self.data_file.bytes(self.as_ref().node_unchecked(row)) }
     }
 
     /// Returns node and value of the specified row.
     unsafe fn node_value_unchecked(&self, row: NonZeroU32) -> (&AvltrieeNode<DataAddress>, &[u8]) {
-        let node = self.as_ref().node_unchecked(row);
-        (node, self.data_file.bytes(node))
+        unsafe {
+            let node = self.as_ref().node_unchecked(row);
+            (node, self.data_file.bytes(node))
+        }
     }
 }
 
@@ -160,7 +166,7 @@ impl IdxBinary {
     /// # Arguments
     /// * `path` - Path of directory to save data.
     /// * `allocation_lot` - Extends the specified size when the file size becomes insufficient due to data addition.
-    /// If you expect to add a lot of data, specifying a larger size will improve performance.
+    ///   If you expect to add a lot of data, specifying a larger size will improve performance.
     pub fn new<P: AsRef<Path>>(directory: P, allocation_lot: u32) -> Self {
         let path = directory.as_ref();
         Self {
@@ -184,7 +190,7 @@ impl IdxBinary {
     /// # Arguments
     /// * `path` - Path of part of filename without extension to save data.
     /// * `allocation_lot` - Extends the specified size when the file size becomes insufficient due to data addition.
-    /// If you expect to add a lot of data, specifying a larger size will improve performance.
+    ///   If you expect to add a lot of data, specifying a larger size will improve performance.
     pub fn new_ext<P: AsRef<Path>>(path: P, allocation_lot: u32) -> Self {
         let path = path.as_ref();
         Self {
